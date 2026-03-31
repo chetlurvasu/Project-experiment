@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Are We Fooled By AI?</title>
+  <script src="https://unpkg.com/jspsych@7.3.4"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-image-keyboard-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+  <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Lora:ital,wght@0,600;1,400&display=swap" rel="stylesheet"/>
+
+  <style>
+    :root {
+      --bg:       #f7f6f3;
+      --surface:  #ffffff;
+      --border:   #e2e0da;
+      --text:     #1a1917;
+      --muted:    #6b6860;
+      --accent:   #2d5be3;
+      --correct:  #1a7f4b;
+      --incorrect:#c0392b;
+      --radius:   8px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      color: var(--text);
+    }
+
+    .jspsych-display-element {
+      background: var(--bg) !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 32px 0;
+    }
+    .jspsych-content-wrapper {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .jspsych-content { max-width: 680px; width: 92vw; }
+
+    #jspsych-progressbar-container {
+      background: var(--surface) !important;
+      border-bottom: 1px solid var(--border) !important;
+      padding: 12px 24px !important;
+    }
+    #jspsych-progressbar-inner {
+      background: var(--accent) !important;
+      border-radius: 99px !important;
+      height: 5px !important;
+    }
+    #jspsych-progressbar-container span {
+      font-family: 'Inter', sans-serif !important;
+      font-size: .75rem !important;
+      color: var(--muted) !important;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 44px 48px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+
+    .consent-title {
+      font-family: 'Lora', serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+    .main-title {
+      font-family: 'Lora', serif;
+      font-size: 1.9rem;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 18px;
+      line-height: 1.3;
+      color: var(--text);
+    }
+    .consent-subtitle {
+      font-family: 'Lora', serif;
+      font-style: italic;
+      font-size: .95rem;
+      color: var(--muted);
+      margin-bottom: 28px;
+      line-height: 1.5;
+    }
+    .consent-section { margin-bottom: 20px; }
+    .consent-section h3 {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+    .consent-section p {
+      font-size: .88rem;
+      line-height: 1.7;
+      color: #3a3835;
+    }
+
+    .consent-agree {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin: 24px 0 20px;
+      padding: 14px 16px;
+      background: #f0f3fc;
+      border: 1px solid #c5d0f5;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+    .consent-agree input[type=checkbox] {
+      margin-top: 2px;
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+    .consent-agree label {
+      font-size: .85rem;
+      line-height: 1.55;
+      color: #2a2a2a;
+      cursor: pointer;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 11px 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s;
+    }
+    .btn:hover { opacity: .88; }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .page-title {
+      font-family: 'Lora', serif;
+      font-size: 1.4rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .step-list { list-style: none; margin: 0 0 20px; display: flex; flex-direction: column; gap: 10px; }
+    .step-list li {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      font-size: .9rem;
+      line-height: 1.6;
+      color: #3a3835;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 24px; height: 24px;
+      background: var(--accent);
+      color: #fff;
+      border-radius: 50%;
+      font-size: .75rem;
+      font-weight: 600;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 1px;
+    }
+
+    .key-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin: 20px 0;
+    }
+    .key-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .key {
+      display: inline-flex;
+      align-items: center; justify-content: center;
+      width: 52px; height: 52px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-family: 'Inter', sans-serif;
+      font-size: 1.2rem;
+      font-weight: 600;
+      box-shadow: 0 3px 0 var(--border);
+      color: var(--text);
+    }
+    .key-label { font-size: .75rem; color: var(--muted); font-weight: 500; }
+
+    .hint {
+      font-size: .78rem;
+      color: var(--muted);
+      margin-top: 20px;
+      text-align: center;
+      letter-spacing: .03em;
+    }
+
+    .cue-wrap { text-align: center; }
+    .cue-label { font-size: .75rem; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 10px; }
+    .cue-ms {
+      font-family: 'Lora', serif;
+      font-size: 4rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .cue-unit { font-size: .85rem; color: var(--muted); margin-top: 4px; }
+    .cue-ready { font-size: .88rem; color: var(--muted); margin-top: 16px; }
+
+    .jspsych-image-keyboard-response img {
+      border-radius: 10px;
+      box-shadow: 0 4px 24px rgba(0,0,0,.15);
+      max-width: 360px;
+      max-height: 440px;
+      display: block;
+    }
+
+    .resp-wrap { text-align: center; }
+    .resp-prompt { font-size: 1rem; color: var(--muted); margin-bottom: 20px; }
+
+    .feedback-wrap { text-align: center; }
+    .feedback-icon { font-size: 2.8rem; margin-bottom: 8px; }
+    .feedback-word { font-size: 1.1rem; font-weight: 600; }
+    .feedback-correct   .feedback-word { color: var(--correct); }
+    .feedback-incorrect .feedback-word { color: var(--incorrect); }
+    .feedback-sub { font-size: .85rem; color: var(--muted); margin-top: 8px; }
+
+    .attn-wrap { text-align: center; }
+    .attn-prompt {
+      font-family: 'Lora', serif;
+      font-size: 1.1rem;
+      margin-bottom: 24px;
+      line-height: 1.5;
+    }
+
+    .jspsych-btn {
+      font-family: 'Inter', sans-serif !important;
+      padding: 10px 24px !important;
+      border-radius: var(--radius) !important;
+      border: 1px solid var(--border) !important;
+      background: var(--surface) !important;
+      color: var(--text) !important;
+      font-size: .9rem !important;
+      cursor: pointer !important;
+      transition: border-color .15s !important;
+    }
+    .jspsych-btn:hover { border-color: var(--accent) !important; }
+
+    .fixation { font-size: 2rem; color: var(--muted); text-align: center; }
+
+    .jspsych-survey-multi-choice .jspsych-survey-multi-choice-preamble { margin-bottom: 20px; }
+    .jspsych-survey-multi-choice .jspsych-survey-multi-choice-question { margin-bottom: 20px; }
+    .jspsych-survey-multi-choice label { font-size: .9rem; margin: 8px 0; }
+
+    .jspsych-survey-text input[type="text"] {
+      font-family: 'Inter', sans-serif;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: .9rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .block-intro {
+      text-align: center;
+    }
+    .block-intro .page-title {
+      margin-bottom: 24px;
+    }
+  </style>
+</head>
+<body>
+<script>
+const ETHNICITIES = ['B','EA','SA','W'];
+const NUMBERS     = Array.from({length:50}, (_,i) => i+1);
+
+function buildPool(type, gender) {
+  const folder = type==='real' ? 'Real faces' : 'Synthetic faces';
+  const code   = type==='real' ? 'R' : 'S';
+  return NUMBERS.flatMap(n =>
+    ETHNICITIES.map(e => ({
+      img: `Stimuli/${folder}/${n}.${code}.${e}.${gender}.png`,
+      type, gender, ethnicity: e
+    }))
+  );
+}
+
+const POOL_REAL_F = buildPool('real','F');
+const POOL_REAL_M = buildPool('real','M');
+const POOL_AI_F   = buildPool('ai',  'F');
+const POOL_AI_M   = buildPool('ai',  'M');
+
+const CONFIG = {
+  nRealPerBlock: 5,
+  nAIPerBlock: 5,
+  durations: [500, 1000, 3000],
+  keyReal: 'f',
+  keyAI:   'j',
+  nPracticePerBlock: 2,
+  fixationDuration: 500,
+  cueDuration: 1500,
+  nAttentionChecksPerBlock: 1,
+};
+
+// Track used images globally to prevent repetition across all blocks
+let usedImages = new Set();
+
+function shuffle(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function sample(arr, n) {
+  return shuffle(arr).slice(0, n);
+}
+
+function sampleWithoutRepetition(arr, n, used) {
+  const available = arr.filter(item => !used.has(item.img));
+  if (available.length < n) {
+    console.warn(`Requested ${n} items but only ${available.length} available without repetition`);
+  }
+  return shuffle(available).slice(0, Math.min(n, available.length));
+}
+
+function buildBlockStimuli(duration) {
+  const realFaces = [
+    ...sampleWithoutRepetition(POOL_REAL_F, Math.ceil(CONFIG.nRealPerBlock / 2), usedImages),
+    ...sampleWithoutRepetition(POOL_REAL_M, Math.floor(CONFIG.nRealPerBlock / 2), usedImages)
+  ];
+  const aiFaces = [
+    ...sampleWithoutRepetition(POOL_AI_F, Math.ceil(CONFIG.nAIPerBlock / 2), usedImages),
+    ...sampleWithoutRepetition(POOL_AI_M, Math.floor(CONFIG.nAIPerBlock / 2), usedImages)
+  ];
+  
+  const stimuli = shuffle([...realFaces, ...aiFaces]).map(s => ({...s, duration}));
+  stimuli.forEach(s => usedImages.add(s.img));
+  return stimuli;
+}
+
+function buildPracticeStimuli(duration) {
+  const candidates = [
+    POOL_REAL_F[POOL_REAL_F.length-1],
+    POOL_REAL_M[POOL_REAL_M.length-1],
+    POOL_AI_F[POOL_AI_F.length-1],
+    POOL_AI_M[POOL_AI_M.length-1],
+  ];
+  return shuffle(candidates).slice(0, CONFIG.nPracticePerBlock).map(s => ({...s, duration}));
+}
+
+function chooseAttentionPositions(totalTrials, n) {
+  if (totalTrials <= 4) return new Set();
+  const positions = new Set();
+  while(positions.size < n)
+    positions.add(2 + Math.floor(Math.random() * (totalTrials - 4)));
+  return positions;
+}
+
+const ETHNICITY_LABELS = { B:'Black', EA:'East Asian', SA:'South Asian', W:'White' };
+const ALL_ETHNICITIES  = Object.values(ETHNICITY_LABELS);
+function getWrongEthnicity(correctCode) {
+  return shuffle(ALL_ETHNICITIES.filter(e => e !== ETHNICITY_LABELS[correctCode]))[0];
+}
+
+const jsPsych = initJsPsych({
+  show_progress_bar: true,
+  message_progress_bar: 'Progress',
+  on_finish: function() {
+    const demographics = jsPsych.data.get().filter({trial_type: 'survey-multi-choice'}).values()[0];
+    const filename = `face_detection_${new Date().getTime()}.csv`;
+    jsPsych.data.get().localSave('csv', filename);
+
+    jsPsych.getDisplayElement().innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;">
+        <div class="card" style="max-width:560px;width:92vw;text-align:center;">
+          <div style="font-size:2.5rem;margin-bottom:16px;">🙏</div>
+          <div style="font-family:'Lora',serif;font-size:1.4rem;font-weight:600;margin-bottom:12px;">
+            Thank you for participating!
+          </div>
+          <p style="font-size:.92rem;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+            Your responses have been recorded and saved locally.<br>
+            You may now close this window.
+          </p>
+        </div>
+      </div>`;
+  }
+});
+
+const consent = {
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+  <div style="max-width:660px;width:92vw;margin:0 auto;">
+  <div class="main-title">Welcome to the Face Authenticity Detection Task</div>
+  <div class="card" style="text-align:left;">
+    <div class="consent-title">Are We Fooled By AI?</div>
+    <div class="consent-subtitle">
+      Analysing the ability to distinguish between real and AI-generated faces based on exposure time
+    </div>
+    <div class="consent-section">
+      <h3>Researchers</h3>
+      <p>We are graduate students studying Artificial Intelligence at Utrecht University (UU), conducting this experiment as part of the course <em>Experimentation in Psychology, Linguistics and AI</em>.</p>
+      <p style="margin-top:6px;">Our hypothesis: <em>Does exposure time affect accuracy in distinguishing real faces from AI-generated ones?</em></p>
+    </div>
+    <div class="consent-section">
+      <h3>Invitation and Purpose</h3>
+      <p>You are invited to participate in a short perceptual study. The goal is to understand how well people can tell apart real photographs of faces from AI-generated images, and whether the time a face is displayed influences that judgment.</p>
+    </div>
+    <div class="consent-section">
+      <h3>What Participation Involves</h3>
+      <p>You will complete a brief practice session in each of three blocks, followed by 10 experimental trials per block. Each trial shows a face for a short duration. You will then press a key to indicate whether it was real or AI-generated. The session takes approximately 15–20 minutes.</p>
+    </div>
+    <div class="consent-section">
+      <h3>Potential Risks and Your Rights</h3>
+      <p>There are no known risks associated with this study. Participation is entirely voluntary. You may withdraw at any time without consequence, simply by closing the browser window.</p>
+    </div>
+    <div class="consent-section">
+      <h3>Confidentiality</h3>
+      <p>All responses are recorded anonymously. No personally identifiable information is collected. Data will be stored securely and used solely for academic research purposes.</p>
+    </div>
+    <div class="consent-section">
+      <h3>Contact</h3>
+      <p>If you have questions about this study, please contact us at: <strong>c.chetlurvasundhara@students.uu.nl</strong></p>
+    </div>
+    <div class="consent-agree" onclick="document.getElementById('agreeBox').click()">
+      <input type="checkbox" id="agreeBox" onclick="event.stopPropagation();toggleConsent(this)"/>
+      <label for="agreeBox">I have read and understood the above information. I agree to participate voluntarily in this study and confirm that I am 18 years of age or older.</label>
+    </div>
+    <div style="text-align:center;">
+      <button class="btn" id="proceedBtn" disabled onclick="proceedFromConsent()">Continue to Demographics →</button>
+    </div>
+  </div></div>`,
+  choices: [],
+  on_load: function() {
+    window.toggleConsent      = (cb) => { document.getElementById('proceedBtn').disabled = !cb.checked; };
+    window.proceedFromConsent = ()   => { jsPsych.finishTrial({consented: true}); };
+  },
+};
+
+const demographics = {
+  type: jsPsychSurveyText,
+  questions: [
+    {
+      prompt: "What is your age (in years)?",
+      name: 'age',
+      required: true,
+      input_type: 'number',
+    }
+  ],
+  preamble: `<div class="card" style="max-width:560px;width:92vw;"><div class="page-title">Background Information</div><p style="font-size:.9rem;color:var(--muted);margin-bottom:20px;">Please enter your age.</p>`,
+  button_label: 'Continue to Gender →',
+};
+
+const genderQuestion = {
+  type: jsPsychSurveyMultiChoice,
+  questions: [
+    {
+      prompt: "What is your gender?",
+      name: 'gender',
+      options: ['Male', 'Female', 'Non-binary', 'Prefer to self-describe', 'Prefer not to say'],
+      required: true,
+      horizontal: false,
+    }
+  ],
+  preamble: `<div class="card" style="max-width:560px;width:92vw;"><div class="page-title">Background Information</div><p style="font-size:.9rem;color:var(--muted);margin-bottom:20px;">Please answer the following question.</p>`,
+  button_label: 'Continue to Instructions →',
+};
+
+const instructions = {
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div class="card" style="max-width:560px;width:92vw;">
+      <div class="page-title">How the experiment works</div>
+      <ol class="step-list">
+        <li><span class="step-num">1</span><span>A number appears telling you how long the face will be shown (500, 1000, or 3000 ms). Use this time to prepare.</span></li>
+        <li><span class="step-num">2</span><span>The face appears for exactly that duration, then disappears.</span></li>
+        <li><span class="step-num">3</span><span>Judge whether it was a <strong>real photograph</strong> or an <strong>AI-generated image</strong>:</span></li>
+      </ol>
+      <div class="key-row">
+        <div class="key-box"><div class="key">F</div><div class="key-label">Real face</div></div>
+        <div class="key-box"><div class="key">J</div><div class="key-label">AI-generated</div></div>
+      </div>
+      <p style="font-size:.88rem;color:var(--muted);text-align:center;line-height:1.6;">
+        Keep your index fingers resting on <strong>F</strong> and <strong>J</strong> throughout.<br>
+        You will complete three blocks with different face display speeds.<br>
+        Occasionally you may be asked a brief question about the face you just saw.<br>
+        We start with <strong>2 practice trials</strong> with feedback before each block.
+      </p>
+      <div class="hint" style="margin-top:20px;">Press the button below when you are ready.</div>
+    </div>`,
+  choices: ['Start Block 1'],
+  button_html: '<button class="btn">%choice%</button>',
+};
+
+const fixation = {
+  type: jsPsychHtmlKeyboardResponse,
+  stimulus: '<div class="fixation">+</div>',
+  choices: 'NO_KEYS',
+  trial_duration: CONFIG.fixationDuration,
+};
+
+function makeCue(stim, phase, block) {
+  return {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <div class="cue-wrap">
+        <div class="cue-label">Face display duration</div>
+        <div class="cue-ms">${stim.duration}</div>
+        <div class="cue-unit">milliseconds</div>
+        <div class="cue-ready">Get ready…</div>
+      </div>`,
+    choices: 'NO_KEYS',
+    trial_duration: CONFIG.cueDuration,
+    data: { phase, block, cued_duration: stim.duration },
+  };
+}
+
+function makeFaceDisplay(stim, phase, block) {
+  return {
+    type: jsPsychImageKeyboardResponse,
+    stimulus: stim.img,
+    stimulus_width: 360,
+    maintain_aspect_ratio: true,
+    choices: 'NO_KEYS',
+    trial_duration: stim.duration,
+    response_ends_trial: false,
+    data: { phase, block, img: stim.img, face_type: stim.type, gender: stim.gender, ethnicity: stim.ethnicity, duration: stim.duration },
+  };
+}
+
+function makeResponseScreen(stim, phase, block) {
+  return {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <div class="resp-wrap">
+        <div class="resp-prompt">Was the face real or AI-generated?</div>
+        <div class="key-row">
+          <div class="key-box"><div class="key">F</div><div class="key-label">Real</div></div>
+          <div class="key-box"><div class="key">J</div><div class="key-label">AI-generated</div></div>
+        </div>
+      </div>`,
+    choices: [CONFIG.keyReal, CONFIG.keyAI],
+    data: {
+      phase, block, img: stim.img, face_type: stim.type,
+      gender: stim.gender, ethnicity: stim.ethnicity,
+      duration: stim.duration, response_screen: true,
+    },
+    on_finish: function(data) {
+      data.correct = (data.response === CONFIG.keyReal && stim.type === 'real') ||
+                     (data.response === CONFIG.keyAI   && stim.type === 'ai');
+    },
+  };
+}
+
+function makeFeedback() {
+  return {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: function() {
+      const last = jsPsych.data.get().last(1).values()[0];
+      if (last.correct) {
+        return `<div class="feedback-wrap feedback-correct"><div class="feedback-icon">✓</div><div class="feedback-word">Correct</div></div>`;
+      } else {
+        const ans = last.face_type==='real' ? 'F — Real' : 'J — AI-generated';
+        return `<div class="feedback-wrap feedback-incorrect"><div class="feedback-icon">✗</div><div class="feedback-word">Incorrect</div><div class="feedback-sub">The correct answer was <strong>${ans}</strong></div></div>`;
+      }
+    },
+    choices: 'NO_KEYS',
+    trial_duration: 1400,
+  };
+}
+
+function makeAttentionCheck(stim) {
+  const questionType = Math.random() < 0.5 ? 'gender' : 'ethnicity';
+  if (questionType === 'gender') {
+    const correct = stim.gender === 'F' ? 'Female' : 'Male';
+    const wrong   = stim.gender === 'F' ? 'Male'   : 'Female';
+    const options = shuffle([correct, wrong]);
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<div class="card" style="max-width:480px;width:92vw;"><div class="attn-wrap"><div class="attn-prompt">Quick question about the face you just saw:<br><br><strong>What was the gender of the person?</strong></div></div></div>`,
+      choices: options,
+      button_html: '<button class="btn btn-outline" style="min-width:120px;">%choice%</button>',
+      data: { phase: 'attention_check', question_type: 'gender', correct_answer: correct },
+      on_finish: function(data) { data.attn_correct = options[data.response] === correct; },
+    };
+  } else {
+    const correctLabel = ETHNICITY_LABELS[stim.ethnicity];
+    const wrongLabel   = getWrongEthnicity(stim.ethnicity);
+    const options = shuffle([correctLabel, wrongLabel]);
+    return {
+      type: jsPsychHtmlButtonResponse,
+      stimulus: `<div class="card" style="max-width:480px;width:92vw;"><div class="attn-wrap"><div class="attn-prompt">Quick question about the face you just saw:<br><br><strong>What was the ethnicity of the person?</strong></div></div></div>`,
+      choices: options,
+      button_html: '<button class="btn btn-outline" style="min-width:140px;">%choice%</button>',
+      data: { phase: 'attention_check', question_type: 'ethnicity', correct_answer: correctLabel },
+      on_finish: function(data) { data.attn_correct = options[data.response] === correctLabel; },
+    };
+  }
+}
+
+function buildTrial(stim, phase, block, showFeedback, withAttentionCheck) {
+  const t = [fixation, makeCue(stim, phase, block), makeFaceDisplay(stim, phase, block), makeResponseScreen(stim, phase, block)];
+  if (showFeedback)       t.push(makeFeedback());
+  if (withAttentionCheck) t.push(makeAttentionCheck(stim));
+  return t;
+}
+
+function buildBlockIntro(blockNum, duration) {
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="card" style="max-width:480px;width:92vw;">
+        <div class="block-intro">
+          <div class="page-title">Block ${blockNum}: ${duration}ms Display</div>
+          <p style="font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+            In this block, faces will be displayed for <strong>${duration} milliseconds</strong>.<br><br>
+            Let's start with <strong>2 practice trials</strong> with feedback.
+          </p>
+        </div>
+      </div>`,
+    choices: ['Begin Practice'],
+    button_html: '<button class="btn">%choice%</button>',
+  };
+}
+
+function buildBlockComplete(blockNum, isLast) {
+  const nextText = isLast ? 'View Results' : 'Start Block ' + (blockNum + 1);
+  return {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div class="card" style="max-width:480px;width:92vw;text-align:center;">
+        <div class="page-title">Block ${blockNum} Complete ✓</div>
+        <p style="font-size:.9rem;color:var(--muted);line-height:1.7;margin-bottom:24px;">
+          Great work! ${isLast ? 'You have completed all blocks.' : 'Get ready for the next block.'}
+        </p>
+      </div>`,
+    choices: [nextText],
+    button_html: '<button class="btn">%choice%</button>',
+  };
+}
+
+// Build timeline with randomized block order
+const timeline = [consent, demographics, genderQuestion, instructions];
+
+// Randomize block order
+const blockDurations = [500, 1000, 3000];
+const randomizedOrder = shuffle([0, 1, 2]);
+
+const practiceStimuli = {};
+const mainStimuli = {};
+const attnPositions = {};
+
+// Pre-build all blocks with randomized order
+for (let i = 0; i < 3; i++) {
+  const originalIndex = randomizedOrder[i];
+  const duration = blockDurations[originalIndex];
+  practiceStimuli[i] = buildPracticeStimuli(duration);
+  mainStimuli[i] = buildBlockStimuli(duration);
+  attnPositions[i] = chooseAttentionPositions(mainStimuli[i].length, CONFIG.nAttentionChecksPerBlock);
+}
+
+// Preload all stimuli
+const allStimuli = [];
+for (let i = 0; i < 3; i++) {
+  allStimuli.push(...practiceStimuli[i], ...mainStimuli[i]);
+}
+const preload = {
+  type: jsPsychPreload,
+  images: allStimuli.map(s => s.img),
+  show_detailed_errors: true,
+  message: `<div style="text-align:center;padding:40px;font-family:Inter,sans-serif;color:#6b6860;">Loading stimuli…</div>`,
+};
+timeline.push(preload);
+
+// Add three blocks in randomized order
+for (let i = 0; i < 3; i++) {
+  const duration = blockDurations[randomizedOrder[i]];
+  timeline.push(buildBlockIntro(i + 1, duration));
+
+  // Practice trials with feedback
+  practiceStimuli[i].forEach(s => {
+    timeline.push(...buildTrial(s, 'practice', i + 1, true, false));
+  });
+
+  // Main trials without feedback
+  mainStimuli[i].forEach((s, idx) => {
+    timeline.push(...buildTrial(s, 'main', i + 1, false, attnPositions[i].has(idx)));
+  });
+
+  timeline.push(buildBlockComplete(i + 1, i === 2));
+}
+
+jsPsych.run(timeline);
+</script>
+</body>
+</html>
